@@ -1,0 +1,6 @@
+flask
+speechrecognition
+pyttsx3
+groq
+pydub
+gunicorn

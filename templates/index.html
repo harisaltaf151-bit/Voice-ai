@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Voice Assistant</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --ink: #1d1d1f;
+    --ink-dim: #86868b;
+    --blue: #0071e3;
+    --green: #34c759;
+    --line: #e5e5e7;
+  }
+
+  * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 440px;
+    background: var(--card);
+    border-radius: 24px;
+    padding: 48px 36px 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 20px 40px -20px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 40px;
+    color: var(--ink);
+  }
+
+  .orb-wrap {
+    position: relative;
+    width: 168px;
+    height: 168px;
+    margin: 0 auto 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .orb-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+  }
+
+  .orb {
+    width: 116px;
+    height: 116px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fafafa, #ececee);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.04),
+      0 8px 20px -6px rgba(0,0,0,0.10),
+      inset 0 1px 1px rgba(255,255,255,0.9);
+    position: relative;
+    transition: box-shadow 0.5s ease, background 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card.listening .orb {
+    background: linear-gradient(180deg, #eaf3ff, #dcecff);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.04),
+      0 0 0 8px rgba(0,113,227,0.08),
+      0 8px 24px -6px rgba(0,113,227,0.25);
+  }
+
+  .card.listening .orb-ring {
+    border-color: rgba(0,113,227,0.35);
+    animation: expandRing 1.5s ease-out infinite;
+  }
+
+  @keyframes expandRing {
+    0% { transform: scale(0.88); opacity: 0.7; }
+    100% { transform: scale(1.22); opacity: 0; }
+  }
+
+  .card.speaking .orb {
+    background: linear-gradient(180deg, #e9faed, #dcf5e2);
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.04),
+      0 0 0 8px rgba(52,199,89,0.08),
+      0 8px 24px -6px rgba(52,199,89,0.25);
+  }
+
+  .bars {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .card.speaking .bars { opacity: 1; }
+  .bars span {
+    width: 3px;
+    height: 14px;
+    background: var(--green);
+    border-radius: 2px;
+    animation: bar 0.9s ease-in-out infinite;
+  }
+  .bars span:nth-child(1) { animation-delay: 0s; }
+  .bars span:nth-child(2) { animation-delay: 0.15s; }
+  .bars span:nth-child(3) { animation-delay: 0.3s; }
+  .bars span:nth-child(4) { animation-delay: 0.45s; }
+  .bars span:nth-child(5) { animation-delay: 0.6s; }
+  @keyframes bar {
+    0%, 100% { height: 8px; }
+    50% { height: 28px; }
+  }
+
+  .mic-icon {
+    width: 22px;
+    height: 22px;
+    color: var(--ink-dim);
+    transition: opacity 0.25s ease;
+  }
+  .card.listening .mic-icon, .card.speaking .mic-icon { opacity: 0; }
+
+  .status-line {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-dim);
+    margin-bottom: 28px;
+    min-height: 18px;
+    transition: color 0.3s ease;
+  }
+  .card.listening .status-line { color: var(--blue); }
+  .card.speaking .status-line { color: var(--green); }
+
+  .talk-btn {
+    background: var(--ink);
+    color: white;
+    border: none;
+    border-radius: 980px;
+    padding: 14px 34px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .talk-btn:hover { background: #000; }
+  .talk-btn:active { transform: scale(0.96); }
+  .card.listening .talk-btn { background: var(--blue); }
+
+  .transcript {
+    margin-top: 36px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+  .transcript:empty { display: none; margin-top: 0; }
+
+  .msg {
+    font-size: 14px;
+    line-height: 1.55;
+    padding: 13px 16px;
+    border-radius: 14px;
+    background: #f5f5f7;
+    animation: rise 0.3s ease;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .msg .tag {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    margin-bottom: 4px;
+  }
+  .msg.user .tag { color: var(--blue); }
+  .msg.ai .tag { color: var(--green); }
+  .msg.err { background: #fdecec; }
+  .msg.err .tag { color: #d9412e; }
+
+  audio { display: none; }
+
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+
+  @media (max-width: 480px) {
+    .card { padding: 40px 24px 32px; border-radius: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="eyebrow">EZITECH · ML INTERNSHIP</div>
+  <h1>Voice Assistant</h1>
+
+  <div class="orb-wrap">
+    <div class="orb-ring"></div>
+    <div class="orb">
+      <svg class="mic-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="9" y="2" width="6" height="12" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <path d="M12 17v4"/>
+      </svg>
+      <div class="bars"><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <div class="status-line" id="statusLine">Tap to speak</div>
+  <button class="talk-btn" id="talkBtn">Start talking</button>
+
+  <div class="transcript" id="chatBox"></div>
+  <audio id="responseAudio" controls></audio>
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+const card = document.getElementById("card");
+const talkBtn = document.getElementById("talkBtn");
+const statusLine = document.getElementById("statusLine");
+const chatBox = document.getElementById("chatBox");
+const responseAudio = document.getElementById("responseAudio");
+
+talkBtn.addEventListener("click", () => {
+    if (!isRecording) startRecording();
+    else stopRecording();
+});
+
+async function startRecording() {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+    mediaRecorder.start();
+    isRecording = true;
+
+    card.classList.remove("speaking");
+    card.classList.add("listening");
+    talkBtn.innerText = "Stop and send";
+    statusLine.innerText = "Listening…";
+}
+
+function stopRecording() {
+    mediaRecorder.stop();
+    isRecording = false;
+    card.classList.remove("listening");
+    talkBtn.innerText = "Start talking";
+    statusLine.innerText = "Thinking…";
+
+    mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "input.webm");
+
+        const res = await fetch("/process", { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (data.error) {
+            statusLine.innerText = "Tap to speak";
+            addMsg("err", "Error", data.error);
+            return;
+        }
+
+        addMsg("user", "You said", data.user_text);
+        addMsg("ai", "Assistant", data.ai_text);
+
+        card.classList.add("speaking");
+        statusLine.innerText = "Speaking…";
+
+        responseAudio.src = data.audio_url + "?t=" + Date.now();
+        responseAudio.play();
+        responseAudio.onended = () => {
+            card.classList.remove("speaking");
+            statusLine.innerText = "Tap to speak";
+        };
+    };
+}
+
+function addMsg(cls, tag, text) {
+    const div = document.createElement("div");
+    div.className = "msg " + cls;
+    div.innerHTML = `<span class="tag">${tag}</span>${text}`;
+    chatBox.appendChild(div);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+</script>
+</body>
+</html>
